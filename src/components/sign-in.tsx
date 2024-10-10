@@ -3,45 +3,60 @@
 import React, { useState } from "react";
 import { IconBrandAppleFilled, IconBrandGoogleFilled } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
+import signInUser from "../api/sign-in"; // Adjust the import path as necessary
 
 export const SignInForm: React.FC = () => {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [usernameError, setUsernameError] = useState("");
+    const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
+    const [submitError, setSubmitError] = useState(""); // New state for submit error
+    const [isLoading, setIsLoading] = useState(false); // New state for loading
 
-    const validateUsername = (username: string) => {
-        return username.length >= 3; // Simple validation, adjust as needed
+    const validateEmail = (email: string) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
     };
 
     const validatePassword = (password: string) => {
         return password.length >= 6; // Simple validation, adjust as needed
     };
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
-        setUsernameError("");
+        setEmailError("");
         setPasswordError("");
+        setSubmitError(""); // Reset submit error on submit
+        setIsLoading(true); // Set loading state to true
 
-        const isUsernameValid = validateUsername(username);
+        const isEmailValid = validateEmail(email);
         const isPasswordValid = validatePassword(password);
 
-        if (!isUsernameValid) {
-            setUsernameError("Username must be at least 3 characters long.");
+        if (!isEmailValid) {
+            setEmailError("Please enter a valid email address.");
         }
         if (!isPasswordValid) {
             setPasswordError("Password must be at least 6 characters long.");
         }
 
-        if (isUsernameValid && isPasswordValid) {
-            console.log("Form submitted successfully");
-            // Add your sign-in logic here
+        if (isEmailValid && isPasswordValid) {
+            try {
+                const data = await signInUser({ email, password });
+                console.log("Form submitted successfully", data);
+                // Add your success handling logic here, like redirecting or storing tokens
+            } catch (error) {
+                setSubmitError("An error occurred during sign in. Please try again." + error); // Set error message
+            } finally {
+                setIsLoading(false); // Reset loading state
+            }
+        } else {
+            setIsLoading(false); // Reset loading state if validation fails
         }
     };
 
-    const handleBlur = (field: "username" | "password") => {
-        if (field === "username") {
-            setUsernameError("");
+    const handleBlur = (field: "email" | "password") => {
+        if (field === "email") {
+            setEmailError("");
         } else {
             setPasswordError("");
         }
@@ -60,11 +75,11 @@ export const SignInForm: React.FC = () => {
                 <h1 className="text-2xl font-bold text-center mb-6">Sign in to your account</h1>
 
                 <div className="relative pb-5">
-                    <label htmlFor="username" className="block text-sm font-medium mb-1">
-                        Username
+                    <label htmlFor="email" className="block text-sm font-medium mb-1">
+                        Email
                     </label>
-                    <input id="username" name="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} onBlur={() => handleBlur("username")} placeholder="Username" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="username" />
-                    <AnimatePresence>{usernameError && <ErrorPopup message={usernameError} />}</AnimatePresence>
+                    <input id="email" name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} onBlur={() => handleBlur("email")} placeholder="Email" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="email" />
+                    <AnimatePresence>{emailError && <ErrorPopup message={emailError} />}</AnimatePresence>
                 </div>
 
                 <div className="relative pb-5">
@@ -75,9 +90,15 @@ export const SignInForm: React.FC = () => {
                     <AnimatePresence>{passwordError && <ErrorPopup message={passwordError} />}</AnimatePresence>
                 </div>
 
-                <button type="submit" className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition duration-300">
-                    Sign In
+                <button
+                    type="submit"
+                    className={`w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    disabled={isLoading} // Disable button when loading
+                >
+                    {isLoading ? "Signing In..." : "Sign In"}
                 </button>
+
+                <AnimatePresence>{submitError && <ErrorPopup message={submitError} />}</AnimatePresence>
 
                 <div className="relative flex items-center">
                     <div className="flex-grow border-t border-border"></div>

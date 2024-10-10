@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { IconBrandAppleFilled, IconBrandGoogleFilled } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "framer-motion";
+import signUpUser from "../api/sign-up"; // Adjust the import path as necessary
 
 export function SignUpForm() {
     const [email, setEmail] = useState("");
@@ -11,6 +12,8 @@ export function SignUpForm() {
     const [lastName, setLastName] = useState("");
     const [emailError, setEmailError] = useState("");
     const [passwordError, setPasswordError] = useState("");
+    const [submitError, setSubmitError] = useState(""); // New state for submit error
+    const [isLoading, setIsLoading] = useState(false); // New state for loading
 
     const validateEmail = (email: string) => {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,8 +31,13 @@ export function SignUpForm() {
         return "";
     };
 
-    const handleSubmit = (event: React.FormEvent) => {
+    const handleSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
+        setEmailError("");
+        setPasswordError("");
+        setSubmitError(""); // Reset submit error on submit
+        setIsLoading(true); // Set loading state to true
+
         const isEmailValid = validateEmail(email);
         const passwordValidationMessage = validatePassword(password);
 
@@ -37,7 +45,17 @@ export function SignUpForm() {
         setPasswordError(passwordValidationMessage);
 
         if (isEmailValid && !passwordValidationMessage) {
-            console.log("Form submitted successfully");
+            try {
+                const data = await signUpUser({ email, password, firstName, lastName });
+                console.log("Form submitted successfully", data);
+                // Add your success handling logic here, like redirecting or showing a success message
+            } catch (error) {
+                setSubmitError("An error occurred during sign up. Please try again." + error); // Set error message
+            } finally {
+                setIsLoading(false); // Reset loading state
+            }
+        } else {
+            setIsLoading(false); // Reset loading state if validation fails
         }
     };
 
@@ -72,7 +90,6 @@ export function SignUpForm() {
                 <h1 className="text-2xl font-bold text-center mb-6">Create an account</h1>
 
                 <div className="relative pb-3">
-                    {" "}
                     <label htmlFor="email" className="block text-sm font-medium mb-1">
                         Email
                     </label>
@@ -81,7 +98,6 @@ export function SignUpForm() {
                 </div>
 
                 <div className="relative pb-5 mt-2">
-                    {" "}
                     <label htmlFor="password" className="block text-sm font-medium mb-1">
                         Password
                     </label>
@@ -103,9 +119,11 @@ export function SignUpForm() {
                     <input id="lastName" name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="family-name" />
                 </div>
 
-                <button type="submit" className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition duration-300">
-                    Sign Up
+                <button type="submit" className={`w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`} disabled={isLoading}>
+                    {isLoading ? "Signing Up..." : "Sign Up"}
                 </button>
+
+                <AnimatePresence>{submitError && <ErrorPopup message={submitError} />}</AnimatePresence>
 
                 <div className="relative flex items-center">
                     <div className="flex-grow border-t border-border"></div>
