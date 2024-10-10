@@ -20,13 +20,17 @@ const signUpUser = async ({ email, password, firstName, lastName }: SignUpData) 
             headers: {
                 "Content-Type": "application/json",
             },
+            withCredentials: true,
         });
         console.log("User signed up successfully:", response.data);
+        return response.data;
     } catch (error) {
         if (axios.isAxiosError(error)) {
-            console.error("Error signing up the user:", error.response?.data);
+            const errorMessage = error.response?.data?.message || "An error occurred during sign up";
+            console.error("Error signing up the user:", errorMessage);
         } else {
             console.error("Error signing up the user:", (error as Error).message);
+            throw error;
         }
     }
 };

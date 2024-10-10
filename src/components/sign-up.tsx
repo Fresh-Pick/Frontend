@@ -2,72 +2,126 @@
 
 import React, { useState } from "react";
 import { IconBrandAppleFilled, IconBrandGoogleFilled } from "@tabler/icons-react";
-import signUpUser from "../api/sign-up"; // Adjust the import path as necessary
+import { motion, AnimatePresence } from "framer-motion";
 
-export const SignUpForm: React.FC = () => {
+export function SignUpForm() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
 
-    const handleSubmit = async (event: React.FormEvent) => {
-        event.preventDefault();
-        await signUpUser({ email, password, firstName, lastName });
+    const validateEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     };
 
-    return (
-        <div className="flex w-full h-screen items-center justify-center">
-            <form onSubmit={handleSubmit} className="flex w-full max-w-[430px] flex-col gap-2">
-                <div className="overflow-hidden rounded-xl border border-neutral-200 p-2 shadow-sm dark:border-neutral-900">
-                    <div className="flex w-full flex-col items-start justify-start gap-4 rounded-xl p-3 pb-4">
-                        <div>
-                            <h1 className="font-font text-lg">Create an account</h1>
-                        </div>
-                        <div className="w-full">
-                            <label htmlFor="email" className="text-sm">
-                                Email
-                            </label>
-                            <input name="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="mt-1 h-10 w-full rounded-md border px-1 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-800 dark:border-neutral-800 dark:placeholder-neutral-500" />
-                        </div>
-                        <div className="w-full">
-                            <label htmlFor="password" className="text-sm">
-                                Password
-                            </label>
-                            <input name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="mt-1 h-10 w-full rounded-md border px-1 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-800 dark:border-neutral-800 dark:placeholder-neutral-500" />
-                        </div>
-                        <div className="w-full">
-                            <label htmlFor="firstName" className="text-sm">
-                                First Name
-                            </label>
-                            <input name="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="mt-1 h-10 w-full rounded-md border px-1 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-800 dark:border-neutral-800 dark:placeholder-neutral-500" />
-                        </div>
-                        <div className="w-full">
-                            <label htmlFor="lastName" className="text-sm">
-                                Last Name
-                            </label>
-                            <input name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="mt-1 h-10 w-full rounded-md border px-1 placeholder-neutral-400 outline-none focus:ring-2 focus:ring-neutral-800 dark:border-neutral-800 dark:placeholder-neutral-500" />
-                        </div>
-                        <div className="mt-2.5 w-full">
-                            <button type="submit" className="h-10 w-full rounded-md bg-neutral-900 font-medium text-white dark:bg-white dark:text-neutral-950">
-                                Submit
-                            </button>
-                        </div>
+    const validatePassword = (password: string) => {
+        if (password.length < 8) {
+            return "Password must be at least 8 characters long.";
+        }
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\-]).{8,}$/;
+        if (!passwordRegex.test(password)) {
+            return "Password must contain at least one uppercase letter, one lowercase letter, one digit, and one special character.";
+        }
+        return "";
+    };
 
-                        <div className="relative mt-6 w-full">
-                            <div className="absolute left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-neutral-400 dark:bg-black dark:text-neutral-500">Or</div>
-                            <div className="border-b border-neutral-300 dark:border-neutral-800"></div>
-                        </div>
-                        <div className="mt-6 flex w-full flex-col gap-4">
-                            <button className="font-regular flex h-10 w-full items-center justify-center gap-2 rounded-md bg-neutral-900 text-white dark:bg-white dark:text-neutral-950">
-                                <IconBrandGoogleFilled /> <div>Continue with Google</div>
-                            </button>
-                            <button className="font-regular flex h-10 w-full items-center justify-center gap-2 rounded-md bg-neutral-900 text-white dark:bg-white dark:text-neutral-950">
-                                <IconBrandAppleFilled /> <div>Continue with Apple</div>
-                            </button>
-                        </div>
-                    </div>
+    const handleSubmit = (event: React.FormEvent) => {
+        event.preventDefault();
+        const isEmailValid = validateEmail(email);
+        const passwordValidationMessage = validatePassword(password);
+
+        setEmailError(isEmailValid ? "" : "Please enter a valid email address.");
+        setPasswordError(passwordValidationMessage);
+
+        if (isEmailValid && !passwordValidationMessage) {
+            console.log("Form submitted successfully");
+        }
+    };
+
+    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setEmail(e.target.value);
+        setEmailError(validateEmail(e.target.value) ? "" : "Please enter a valid email address.");
+    };
+
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setPassword(e.target.value);
+        setPasswordError(validatePassword(e.target.value));
+    };
+
+    const handleBlur = (field: "email" | "password") => {
+        if (field === "email") {
+            setEmailError("");
+        } else {
+            setPasswordError("");
+        }
+    };
+
+    const ErrorPopup = ({ message }: { message: string }) => (
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute left-0 top-full mt-1 bg-destructive text-destructive-foreground p-2 rounded-md shadow-lg z-10 w-full animate-fadeIn">
+            <div className="absolute left-4 -top-1 w-2 h-2 bg-destructive rotate-45 transform -translate-x-1/2"></div>
+            <span className="relative z-10 text-error">{message}</span>
+        </motion.div>
+    );
+
+    return (
+        <div className="flex w-full min-h-screen items-center justify-center bg-background p-4">
+            <form onSubmit={handleSubmit} className="w-full max-w-[430px] bg-card text-card-foreground rounded-lg shadow-lg p-6 space-y-6" noValidate>
+                <h1 className="text-2xl font-bold text-center mb-6">Create an account</h1>
+
+                <div className="relative">
+                    <label htmlFor="email" className="block text-sm font-medium mb-1">
+                        Email
+                    </label>
+                    <input id="email" name="email" type="email" value={email} onChange={handleEmailChange} onBlur={() => handleBlur("email")} placeholder="Email" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="email" />
+                    <AnimatePresence>{emailError && <ErrorPopup message={emailError} />}</AnimatePresence>
+                </div>
+
+                <div className="relative">
+                    <label htmlFor="password" className="block text-sm font-medium mb-1">
+                        Password
+                    </label>
+                    <input id="password" name="password" type="password" value={password} onChange={handlePasswordChange} onBlur={() => handleBlur("password")} placeholder="Password" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="new-password" />
+                    <AnimatePresence>{passwordError && <ErrorPopup message={passwordError} />}</AnimatePresence>
+                </div>
+
+                <div>
+                    <label htmlFor="firstName" className="block text-sm font-medium mb-1">
+                        First Name
+                    </label>
+                    <input id="firstName" name="firstName" type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="given-name" />
+                </div>
+
+                <div>
+                    <label htmlFor="lastName" className="block text-sm font-medium mb-1">
+                        Last Name
+                    </label>
+                    <input id="lastName" name="lastName" type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring" autoComplete="family-name" />
+                </div>
+
+                <button type="submit" className="w-full bg-primary text-primary-foreground py-2 px-4 rounded-md hover:bg-primary/90 transition duration-300">
+                    Sign Up
+                </button>
+
+                <div className="relative flex items-center">
+                    <div className="flex-grow border-t border-border"></div>
+                    <span className="flex-shrink mx-4 text-muted-foreground">Or continue with</span>
+                    <div className="flex-grow border-t border-border"></div>
+                </div>
+
+                <div className="space-y-4">
+                    <button type="button" className="w-full flex items-center justify-center px-4 py-2 border border-input rounded-md shadow-sm text-sm font-medium text-foreground bg-background hover:bg-accent hover:text-accent-foreground">
+                        <IconBrandGoogleFilled className="w-5 h-5 mr-2" />
+                        <span>Continue with Google</span>
+                    </button>
+                    <button type="button" className="w-full flex items-center justify-center px-4 py-2 border border-input rounded-md shadow-sm text-sm font-medium text-foreground bg-background hover:bg-accent hover:text-accent-foreground">
+                        <IconBrandAppleFilled className="w-5 h-5 mr-2" />
+                        <span>Continue with Apple</span>
+                    </button>
                 </div>
             </form>
         </div>
     );
-};
+}
