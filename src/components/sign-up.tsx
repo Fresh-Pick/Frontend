@@ -60,18 +60,19 @@ export function SignUpForm() {
     };
 
     const ErrorPopup = ({ message }: { message: string }) => (
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute left-0 top-full mt-1 bg-destructive text-destructive-foreground p-2 rounded-md shadow-lg z-10 w-full animate-fadeIn">
-            <div className="absolute left-4 -top-1 w-2 h-2 bg-destructive rotate-45 transform -translate-x-1/2"></div>
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute left-0 top-full mt-0.5 bg-destructive text-destructive-foreground p-1.5 rounded-md shadow-lg z-10 w-full text-sm animate-fadeIn">
+            <div className="absolute left-3 -top-1 w-2 h-2 bg-destructive rotate-45 transform -translate-x-1/2"></div>
             <span className="relative z-10 text-error">{message}</span>
         </motion.div>
     );
 
     return (
         <div className="flex w-full min-h-screen items-center justify-center bg-background p-4">
-            <form onSubmit={handleSubmit} className="w-full max-w-[430px] bg-card text-card-foreground rounded-lg shadow-lg p-6 space-y-6" noValidate>
+            <form onSubmit={handleSubmit} className="w-full max-w-[430px] bg-card text-card-foreground rounded-lg shadow-lg p-6 space-y-4" noValidate>
                 <h1 className="text-2xl font-bold text-center mb-6">Create an account</h1>
 
-                <div className="relative">
+                <div className="relative pb-3">
+                    {" "}
                     <label htmlFor="email" className="block text-sm font-medium mb-1">
                         Email
                     </label>
@@ -79,7 +80,8 @@ export function SignUpForm() {
                     <AnimatePresence>{emailError && <ErrorPopup message={emailError} />}</AnimatePresence>
                 </div>
 
-                <div className="relative">
+                <div className="relative pb-5 mt-2">
+                    {" "}
                     <label htmlFor="password" className="block text-sm font-medium mb-1">
                         Password
                     </label>
