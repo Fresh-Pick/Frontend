@@ -1,19 +1,11 @@
-import type { NextRequest } from 'next/server';
-import createMiddleware from 'next-intl/middleware';
+import { type NextRequest } from "next/server";
 
-import { AppConfig } from './utils/AppConfig';
+import { updateSession } from "@/lib/supabase/middleware";
 
-const intlMiddleware = createMiddleware({
-  locales: AppConfig.locales,
-  localePrefix: AppConfig.localePrefix,
-  defaultLocale: AppConfig.defaultLocale,
-});
-
-export default function middleware(request: NextRequest) {
-  // Just run the internationalization middleware
-  return intlMiddleware(request);
+export async function middleware(request: NextRequest) {
+    return await updateSession(request);
 }
 
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next|monitoring).*)', '/', '/(api|trpc)(.*)'], // Also exclude tunnelRoute used in Sentry from the matcher
+    matcher: ["/protected", "/signin", "/admin/:path*"],
 };
