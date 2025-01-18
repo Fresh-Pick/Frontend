@@ -33,6 +33,22 @@ export default function TestTable({ test }: TestTableProps) {
             if (error) {
                 console.error("Error updating stock or orders:", error.message);
             } else {
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser();
+
+                if (user) {
+                    const itemName = items[index].item;
+                    const { error: insertError } = await supabase.from("orders").insert({
+                        person: user.email,
+                        order: itemName,
+                    });
+
+                    if (insertError) {
+                        console.error("Error inserting new order:", insertError.message);
+                    }
+                }
+
                 // Update the local state to reflect the changes
                 const updatedItems = [...items];
                 updatedItems[index].stock_left -= 1;
