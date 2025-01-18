@@ -1,24 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Toast } from "@/components/ui/toast";
 import { Icons } from "@/components/icons";
+import { Toast } from "@radix-ui/react-toast";
 
 export default function SignInPage() {
-    const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SignInPageContent />
+        </Suspense>
+    );
+}
+
+function SignInPageContent() {
+    const [isGoogleLoading, setIsGoogleLoading] = useState(false);
     const supabase = createClient();
-
     const searchParams = useSearchParams();
-
     const next = searchParams.get("next");
 
     async function signInWithGoogle() {
-        setIsGoogleLoading(true);
         try {
+            setIsGoogleLoading(true);
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
                 options: {
@@ -32,15 +37,16 @@ export default function SignInPage() {
         } catch {
             Toast({
                 title: "Please try again.",
-                variant: "destructive",
             });
+        } finally {
             setIsGoogleLoading(false);
         }
     }
 
     return (
         <Button type="button" variant="outline" onClick={signInWithGoogle} disabled={isGoogleLoading}>
-            {isGoogleLoading ? <Icons.loaderCircle className="mr-2 size-4 animate-spin" /> : <Icons.google className="mr-2 size-6" />} Sign in with Google
+            {isGoogleLoading ? <Icons.loaderCircle className="mr-2 size-4 animate-spin" /> : <Icons.google className="mr-2 size-6" />}
+            Sign in with Google
         </Button>
     );
 }
